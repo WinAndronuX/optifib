@@ -17,7 +17,7 @@ include_directories(include)
 
 set(SOURCES
     src/main.c
-    src/loader.c
+    src/persistence.c
     src/dijkstra.c
     lib/graph.c
     lib/priority_queue.c

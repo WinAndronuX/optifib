@@ -9,7 +9,7 @@ typedef enum {        // Atenuacion:
     FIBER_UNDERGROUND // 0.40 dB/km
 } FiberDeployment;
 
-typedef enum {                   // ATENACION (Si el splitter es origen es 0.0)
+typedef enum {                   // ATENUACION (Si el splitter es origen es 0.0)
     NODE_POLE,                   // 0.0 dB
     NODE_MANHOLE,                // 0.0 dB
     NODE_SPLICE_ENCLOSURE,       // 0.1 dB
