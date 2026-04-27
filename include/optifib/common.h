@@ -9,6 +9,10 @@ typedef enum {        // Atenuacion:
     FIBER_UNDERGROUND // 0.40 dB/km
 } FiberDeployment;
 
+static const char* FiberDeploymentStr[] = {
+    "AERIAL", "UNDERGROUND"
+};
+
 typedef enum {                   // ATENUACION (Si el splitter es origen es 0.0)
     NODE_POLE,                   // 0.0 dB
     NODE_MANHOLE,                // 0.0 dB
@@ -19,5 +23,9 @@ typedef enum {                   // ATENUACION (Si el splitter es origen es 0.0)
     NODE_SPLITTER_1_8,           // 10.5 dB
     NODE_SPLITTER_1_16           // 13.8 dB
 } NodeType;
+
+static const char* NodeTypeStr[] = {
+    "POLE", "MANHOLE", "SPLICE_ENCLOSURE", "DISTRIBUTION_HUB", "OLT", "SPLITTER_1_2", "SPLITTER_1_8", "SPLITTER_1_16"
+};
 
 #endif

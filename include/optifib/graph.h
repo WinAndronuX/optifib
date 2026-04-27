@@ -9,6 +9,7 @@
 
 typedef struct _edge {
     int target_id;
+    int source_id;
     FiberDeployment type;
     double distance_km;
     double link_loss_db;
