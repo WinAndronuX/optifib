@@ -19,6 +19,7 @@ set(SOURCES
     src/main.c
     src/persistence.c
     src/dijkstra.c
+    lib/common.c
     lib/graph.c
     lib/priority_queue.c
     lib/utils.c
