@@ -64,9 +64,9 @@ MAP:
 SIM:
     while (1) {
         clearConsole();
-        printf("%s", menuHeadMap);
+        printf("%s", menuHeadSim);
 
-        menuPrint(menuMap);
+        menuPrint(menuSim);
         opc = menuInputOpt(0, 5);
 
         switch (opc) {
