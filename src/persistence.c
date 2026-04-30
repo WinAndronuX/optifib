@@ -62,6 +62,8 @@ MapStatusOp readNode(MapReader* r, Node* n) {
         n->type = NODE_MANHOLE;
     else if (strcmp(type, "SPLICE_ENCLOSURE") == 0)
         n->type = NODE_SPLICE_ENCLOSURE;
+    else if (strcmp(type, "SPLICE_CONNECTION") == 0)
+        n->type = NODE_CONNECTION;
     else if (strcmp(type, "DISTRIBUTION_HUB") == 0)
         n->type = NODE_DISTRIBUTION_HUB;
     else if (strcmp(type, "OLT") == 0)

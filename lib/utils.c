@@ -12,3 +12,7 @@ void clearConsole() {
     system("clear");
     #endif
 }
+
+bool isInRange(int x, int a, int b) {
+    return x >= a && x <= b;
+}

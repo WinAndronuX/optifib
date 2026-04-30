@@ -17,6 +17,7 @@ include_directories(include)
 
 set(SOURCES
     src/main.c
+    src/menu.c
     src/persistence.c
     src/dijkstra.c
     lib/common.c

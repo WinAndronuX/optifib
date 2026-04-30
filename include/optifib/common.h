@@ -15,6 +15,7 @@ typedef enum {                   // ATENUACION (Si el splitter es origen es 0.0)
     NODE_POLE,                   // 0.0 dB
     NODE_MANHOLE,                // 0.0 dB
     NODE_SPLICE_ENCLOSURE,       // 0.1 dB
+    NODE_CONNECTION,             // 0.75 dB
     NODE_DISTRIBUTION_HUB,       // 0.5 dB
     NODE_OLT,                    // Origen
     NODE_SPLITTER_1_2,           // 3.5 dB
