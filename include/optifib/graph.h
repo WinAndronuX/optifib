@@ -6,6 +6,7 @@
 
 #include <optifib/common.h>
 
+#define INITIAL_CAPACITY_GRAPH 100
 
 typedef struct _edge {
     int target_id;
@@ -27,5 +28,11 @@ typedef struct _node {
     int previous_node_id;
     int visited;
 } Node;
+
+typedef struct _graph {
+    Node* nodes;
+    int count;
+    int capacity;
+} Graph;
 
 #endif
