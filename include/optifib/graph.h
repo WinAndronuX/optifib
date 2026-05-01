@@ -6,7 +6,6 @@
 
 #include <optifib/common.h>
 
-#define INITIAL_CAPACITY_GRAPH 100
 
 typedef struct _edge {
     int target_id;
@@ -29,10 +28,21 @@ typedef struct _node {
     int visited;
 } Node;
 
-typedef struct _graph {
+typedef struct _adjlist {
     Node* nodes;
-    int count;
-    int capacity;
-} Graph;
+} Adjlist;
+
+typedef struct _graph {
+    int V;
+    Adjlist* arr;
+}Graph;
+
+Graph* graphCrate();
+void graphFree(Graph* g);
+
+void nodeAdd(Graph* g, int id, const char* description, NodeType type, double intrinsic_loss);
+void edgeAdd(Node* source, int target_id, FiberDeployment type, double distance, double link_loss);
+
+Node* nodeFind(Graph* g, int id);
 
 #endif
