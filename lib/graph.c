@@ -4,52 +4,107 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <float.h>
 #include <optifib/graph.h>
 
 
+Graph* graphCreate() {
+    Graph* g = (Graph*) malloc(sizeof(Graph));
+    if (g == NULL) return NULL;
 
-Graph* create_graph(int capacity) {
-    Graph* g = malloc(sizeof(Graph));
-    g->capacity = capacity;
-    g->count = 0;
-    g->nodes = malloc(sizeof(Node) * capacity);
+    g->V = 0;
+    g->arr = NULL;
+
     return g;
 }
 
-void add_node(Graph* g, int id, NodeType type) {
 
-    if (g->count >= g->capacity) {
-        printf("Error: Grafo lleno (Capacidad maxima alcanzada)\n");
-        return;
-    }
+void nodeAdd(Graph* g, int id, const char* description, NodeType type, double intrinsic_loss) {
+    if (g == NULL) return;
+    Adjlist* temp_arr = (Adjlist*) realloc(g->arr, sizeof(Adjlist) * (g->V + 1));
+    if (temp_arr == NULL) return;
 
-    Node* newNode = &g->nodes[g->count];
+    g->arr = temp_arr;
+
+
+    g->arr[g->V].nodes = (Node*) malloc(sizeof(Node));
+    if (g->arr[g->V].nodes == NULL) return;
+
+    Node* newNode = g->arr[g->V].nodes;
+
 
     newNode->id = id;
     newNode->type = type;
+    newNode->intrinsic_loss_db = intrinsic_loss;
+
+
+    strncpy(newNode->description, description, 49);
+    newNode->description[49] = '\0';
+
+
     newNode->adj_list = NULL;
 
-    g->count++;
+
+    newNode->min_accumulated_loss = DBL_MAX;
+    newNode->previous_node_id = -1;
+    newNode->visited = 0;
+
+    g->V++;
 }
 
-void add_edge(Node* source, int target_id, float distance) {
+
+void edgeAdd(Node* source, int target_id, FiberDeployment type, double distance, double link_loss) {
+    if (source == NULL) return;
 
     Edge* newEdge = (Edge*) malloc(sizeof(Edge));
-
     if (newEdge == NULL) return;
 
+
+    newEdge->source_id = source->id;
     newEdge->target_id = target_id;
+    newEdge->type = type;
     newEdge->distance_km = distance;
+    newEdge->link_loss_db = link_loss;
+
 
     newEdge->next = source->adj_list;
     source->adj_list = newEdge;
 }
 
-Node* find_node(Graph* g, int id) {
-    for (int i = 0; i < g->count; i++) {
-        if (g->nodes[i].id == id) {
-            return &g->nodes[i];
+
+Node* nodeFind(Graph* g, int id) {
+    if (g == NULL || g->arr == NULL) return NULL;
+
+    for (int i = 0; i < g->V; i++) {
+
+        if (g->arr[i].nodes->id == id) {
+            return g->arr[i].nodes;
         }
     }
     return NULL;
+}
+
+
+void graphFree(Graph* g) {
+    if (g == NULL) return;
+
+    for (int i = 0; i < g->V; i++) {
+        Node* current_node = g->arr[i].nodes;
+        if (current_node != NULL) {
+
+            Edge* current_edge = current_node->adj_list;
+            while (current_edge != NULL) {
+                Edge* temp_edge = current_edge;
+                current_edge = current_edge->next;
+                free(temp_edge);
+            }
+
+            free(current_node);
+        }
+    }
+
+
+    if (g->arr != NULL) free(g->arr);
+    free(g);
 }
