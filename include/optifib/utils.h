@@ -14,7 +14,5 @@
 // Funcion para limpiar la consola
 void clearConsole();
 bool isInRange(int x, int a, int b);
-int clearBuffer();
-int getInt(int min, int max);
-void pausa();
+
 #endif
