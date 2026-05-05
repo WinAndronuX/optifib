@@ -2,10 +2,13 @@
  * Gestion de persistencia
  */
 
+#include <linux/limits.h>
 #include <optifib/common.h>
 #include <optifib/persistence.h>
+#include <optifib/utils.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 
 struct Map {
@@ -15,24 +18,29 @@ struct Map {
 };
 
 struct Map* loadMap(const char* name, MapMode mode) {
-
-    if (sizeof(name) > 39 * sizeof(char))
+    if (strlen(name) > 39)
         return NULL;
 
-    char nodesFilename[50], edgesFilename[50];
+    char nodesFilename[64], edgesFilename[64];
+    snprintf(nodesFilename, sizeof(nodesFilename), "mapdata%s%s_nodes.csv", PATH_DIV, name);
+    snprintf(edgesFilename, sizeof(edgesFilename), "mapdata%s%s_edges.csv", PATH_DIV, name);
 
-    snprintf(nodesFilename, sizeof(nodesFilename), "%s_nodes.csv", name);
-    snprintf(edgesFilename, sizeof(edgesFilename), "%s_edges.csv", name);
-
-    FILE* fnodes = fopen(nodesFilename, (mode == MODE_PARSER)? "r" : "w");
+    FILE* fnodes = fopen(nodesFilename, (mode == MODE_PARSER) ? "r" : "w");
     if (fnodes == NULL)
         return NULL;
 
-    FILE* fedges = fopen(edgesFilename, (mode == MODE_PARSER)? "r" : "w");
-    if (fedges == NULL)
+    FILE* fedges = fopen(edgesFilename, (mode == MODE_PARSER) ? "r" : "w");
+    if (fedges == NULL) {
+        fclose(fnodes);
         return NULL;
+    }
 
-    struct Map* m = {};
+    struct Map* m = (struct Map*)malloc(sizeof(struct Map));
+    if (m == NULL) {
+        fclose(fnodes);
+        fclose(fedges);
+        return NULL;
+    }
 
     m->name = name;
     m->nodes = fnodes;
@@ -42,12 +50,12 @@ struct Map* loadMap(const char* name, MapMode mode) {
 }
 
 MapStatusOp readNode(MapReader* r, Node* n) {
-
     int id;
-    char type[20], desc[50];
+    char type[32], desc[64];
     double atenuation_db;
 
-    int i = fscanf(r->nodes, "%d,%s,%s,%lf\n", &id, type, desc, &atenuation_db);
+    // Usar %[^,] para leer cadenas hasta la coma
+    int i = fscanf(r->nodes, "%d,%[^,],%[^,],%lf\n", &id, type, desc, &atenuation_db);
 
     if (i == EOF)
         return MAP_STATUS_IO_ERR;
@@ -60,30 +68,25 @@ MapStatusOp readNode(MapReader* r, Node* n) {
         n->type = NODE_POLE;
     else if (strcmp(type, "MANHOLE") == 0)
         n->type = NODE_MANHOLE;
-    else if (strcmp(type, "SPLICE_ENCLOSURE") == 0)
-        n->type = NODE_SPLICE_ENCLOSURE;
-    else if (strcmp(type, "SPLICE_CONNECTION") == 0)
-        n->type = NODE_CONNECTION;
-    else if (strcmp(type, "DISTRIBUTION_HUB") == 0)
-        n->type = NODE_DISTRIBUTION_HUB;
     else if (strcmp(type, "OLT") == 0)
         n->type = NODE_OLT;
     else
         return MAP_STATUS_OP_ERR;
 
-    strcpy(n->description, desc);
+    n->civil_type = n->type; // Sincronizar con el tipo civil cargado
+    strncpy(n->description, desc, 49);
+    n->description[49] = '\0';
     n->intrinsic_loss_db = atenuation_db;
 
     return MAP_STATUS_OP_OK;
 }
 
 MapStatusOp readEdge(MapReader* r, Edge* e) {
-
     int source_id, target_id;
-    char type[20];
+    char type[32];
     double distance_km;
 
-    int i = fscanf(r->edges, "%d,%d,%s,%lf\n", &source_id, &target_id, type, &distance_km);
+    int i = fscanf(r->edges, "%d,%d,%[^,],%lf\n", &source_id, &target_id, type, &distance_km);
 
     if (i == EOF)
         return MAP_STATUS_IO_ERR;
@@ -95,7 +98,7 @@ MapStatusOp readEdge(MapReader* r, Edge* e) {
 
     if (strcmp(type, "AERIAL") == 0)
         e->type = FIBER_AERIAL;
-    else if (strcmp(type, "UNDERGROUND"))
+    else if (strcmp(type, "UNDERGROUND") == 0)
         e->type = FIBER_UNDERGROUND;
     else
         return MAP_STATUS_OP_ERR;
@@ -106,19 +109,19 @@ MapStatusOp readEdge(MapReader* r, Edge* e) {
 }
 
 MapStatusOp writeNode(MapWriter* w, Node* n) {
-    int i = fprintf(w->nodes, "%d,%s,%s,%lf\n", n->id, NodeTypeStr[n->type], n->description, n->intrinsic_loss_db);
-
-    return (i == 4)? MAP_STATUS_OP_OK : MAP_STATUS_IO_ERR;
+    // Se guarda el tipo civil original, no el equipo instalado en memoria
+    int i = fprintf(w->nodes, "%d,%s,%s,%.2f\n", n->id, NodeTypeStr[n->civil_type], n->description, 0.0);
+    return (i > 0) ? MAP_STATUS_OP_OK : MAP_STATUS_IO_ERR;
 }
 
 MapStatusOp writeEdge(MapWriter* w, Edge* e) {
     int i = fprintf(w->edges, "%d,%d,%s,%lf\n", e->source_id, e->target_id, FiberDeploymentStr[e->type], e->distance_km);
-
-    return (i == 4)? MAP_STATUS_OP_OK : MAP_STATUS_IO_ERR;
+    return (i > 0) ? MAP_STATUS_OP_OK : MAP_STATUS_IO_ERR;
 }
 
-
 void closeMap(struct Map* m) {
-    fclose(m->nodes);
-    fclose(m->edges);
+    if (m == NULL) return;
+    if (m->nodes) fclose(m->nodes);
+    if (m->edges) fclose(m->edges);
+    free(m);
 }

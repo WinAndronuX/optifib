@@ -20,6 +20,7 @@ typedef struct _node {
     int id;
     char description[50];
     NodeType type;
+    NodeType civil_type;
     double intrinsic_loss_db;
 
     Edge* adj_list;
@@ -37,7 +38,7 @@ typedef struct _graph {
     Adjlist* arr;
 }Graph;
 
-Graph* graphCrate();
+Graph* graphCreate();
 void graphFree(Graph* g);
 
 void nodeAdd(Graph* g, int id, const char* description, NodeType type, double intrinsic_loss);

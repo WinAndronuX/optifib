@@ -4,7 +4,8 @@
  * Prototipos para implementacion de Min-Heap
  */
 
-#include "graph.h"
+#include <stdbool.h>
+#include <optifib/graph.h>
 
 
 typedef struct _minheap {

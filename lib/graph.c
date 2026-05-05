@@ -2,7 +2,6 @@
  * Implementacion del grafo mediante una Lista de Adyaciencia
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
@@ -36,6 +35,7 @@ void nodeAdd(Graph* g, int id, const char* description, NodeType type, double in
 
     newNode->id = id;
     newNode->type = type;
+    newNode->civil_type = type;
     newNode->intrinsic_loss_db = intrinsic_loss;
 
 
@@ -65,7 +65,7 @@ void edgeAdd(Node* source, int target_id, FiberDeployment type, double distance,
     newEdge->target_id = target_id;
     newEdge->type = type;
     newEdge->distance_km = distance;
-    newEdge->link_loss_db = link_loss;
+    newEdge->link_loss_db = link_loss * distance;
 
 
     newEdge->next = source->adj_list;
