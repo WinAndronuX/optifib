@@ -6,7 +6,7 @@
 #include <string.h>
 #include <float.h>
 #include <optifib/graph.h>
-
+#include <stdio.h>
 
 Graph* graphCreate() {
     Graph* g = (Graph*) malloc(sizeof(Graph));
@@ -18,6 +18,57 @@ Graph* graphCreate() {
     return g;
 }
 
+
+void graphPrint(Graph* g) {
+    if (g == NULL || g->V == 0) {
+        printf("\n|ERROR|La red esta vacia\n");
+        return;
+    }
+    printf("\n");
+    printf("\n");    printf("\n\t\t=== TOPOLOGIA DE LA RED OPTICA ===\n\n");
+    printf("\t\t  --- INFRAESTRUCTURA (NODOS) ---\n");
+    printf("┌──────┬──────────────────────┬────────────────────────────────┬────────────┐\n");
+    printf("│ %-4s │ %-20s │ %-31s │ %-11s │\n", "ID", "TIPO DE EQUIPO", "DESCRIPCIÓN", "PÉRDIDA");
+    printf("├──────┼──────────────────────┼────────────────────────────────┼────────────┤\n");
+
+    for (int i = 0; i < g->V; i++) {
+        Node* n = g->arr[i].nodes;
+        if (n != NULL) {
+            printf("│ %-4d │ %-20s │ %-30.30s │ %5.2f dB   │\n",
+              n->id,
+              NodeTypeStr[n->civil_type],
+              n->description,
+              n->intrinsic_loss_db);
+
+        }
+        }
+
+    printf("└──────┴──────────────────────┴────────────────────────────────┴────────────┘\n");
+
+    printf("\n\n");
+
+    printf("\t\t--- CONEXIONES DE FIBRA ÓPTICA (ARISTAS) ---\n");
+    printf("┌──────┬──────┬───────────────────┬─────────────┬────────────┐\n");
+    printf("│ %-4s │ %-4s │ %-17s │ %-11s │ %-10s │\n", "ORIG", "DEST", "TIPO DE FIBRA", "DISTANCIA", "ATENUACIÓN");
+    printf("├──────┼──────┼───────────────────┼─────────────┼────────────┤\n");
+    for (int i = 0; i < g->V; i++) {
+
+        Node* n = g->arr[i].nodes;
+        Edge* e = n->adj_list;
+        if ((e!=NULL) && (e->source_id < e->target_id)) {
+            printf("│ %-4d │ %-4d │ %-17s │ %7.2f km  │ %5.2f dB   │\n",
+                e->source_id,
+                e->target_id,
+                FiberDeploymentStr[e->type],
+                e->distance_km,
+                e->link_loss_db);
+            }
+        }
+
+
+    printf("└──────┴──────┴───────────────────┴─────────────┴────────────┘\n");
+
+}
 
 void nodeAdd(Graph* g, int id, const char* description, NodeType type, double intrinsic_loss) {
     if (g == NULL) return;

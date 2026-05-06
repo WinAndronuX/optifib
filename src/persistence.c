@@ -2,7 +2,6 @@
  * Gestion de persistencia
  */
 
-#include <linux/limits.h>
 #include <optifib/common.h>
 #include <optifib/persistence.h>
 #include <optifib/utils.h>
