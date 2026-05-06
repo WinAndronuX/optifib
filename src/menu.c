@@ -89,3 +89,9 @@ int menuInputOpt(int a, int b) {
 
     return x;
 }
+
+void pausa() {
+    printf("\nOprima [Enter] para continuar...");
+    while ((getchar()) != '\n');
+    getchar();
+}

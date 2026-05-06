@@ -13,5 +13,7 @@ extern const char* menuSim[];
 
 void menuPrint(const char* menu[]);
 int menuInputOpt(int a, int b);
+void pausa();
 
 #endif
+
