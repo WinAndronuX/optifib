@@ -9,27 +9,29 @@
 #include <windows.h>
 #endif
 
+#define GRAPH_MAX 5
+
 bool programFinished = false;
 
 
 void menu() {
     int opc = -1;
 
-    Graph* network = graphCreate();
+    GraphList* graphs = initGrapList();
 
 START:
     clearConsole();
     printf("%s", menuHeadStart);
     menuPrint(menuStart);
 
-    opc = menuInputOpt(0, 5);
+    opc = menuInputOpt(0, 2);
 
     switch (opc) {
     case 0: {
         programFinished = true;
         printf("Saliendo y liberando memoria...\n");
 
-        graphFree(network);
+        graphs->destroy(graphs);
         return;
     }
     case 1:
@@ -48,61 +50,50 @@ MAP:
         printf("%s", menuHeadMap);
 
         menuPrint(menuMap);
-        opc = menuInputOpt(0, 5);
+        opc = menuInputOpt(0, 6);
 
         switch (opc) {
             case 0:
                 goto START;
                 break;
             case 1:
-                graphPrint(network);
-
+                graphs->print(graphs);
+                if (graphs->size > 0) {
+                    printf("\nSelecciona el indice del mapa para visualizar detalles (o -1 para cancelar): ");
+                    int idx = getInt();
+                    Graph* g = graphs->get(graphs, idx);
+                    if (g) graphPrint(g);
+                    else if (idx != -1) printf("Indice invalido.\n");
+                }
                 pausa();
                 break;
             case 2: {
-                int nodoId;
-                char desc[50];
-                double intrinsic_loss = 0.0;
-                NodeType tipo;
-
-                printf("\nIngresa el ID del nuevo poste/nodo:");
-                nodoId = getInt();
-                printf("Ingresa una breve descripcion\n > ");
-                scanf(" %49[^\n]", desc);
-
-                printf("\nSelecciona el tipo de equipo:\n\n");
-                printf("\t0. Poste (0.0 dB)\n");
-                printf("\t1. Pozo / Manhole (0.0 dB)\n");
-                printf("\t2. Caja de Empalme (0.1 dB)\n");
-                printf("\t3. Conexión / Conector (0.75 dB)\n");
-                printf("\t4. Hub de Distribución (0.5 dB)\n");
-                printf("\t5. Nodo OLT (origen, 0.0 dB)\n");
-                printf("\t6. Splitter 1:2 (3.5 dB)\n");
-                printf("\t7. Splitter 1:8 (10.5 dB)\n");
-                printf("\t8. Splitter 1:16 (13.8 dB)\n");
-
-                int tipo_input = menuInputOpt(0, 8);
-                tipo = (NodeType)tipo_input;
-
-                switch(tipo) {
-                    case NODE_SPLICE_ENCLOSURE: intrinsic_loss = 0.1; break;
-                    case NODE_CONNECTION:       intrinsic_loss = 0.75; break;
-                    case NODE_DISTRIBUTION_HUB: intrinsic_loss = 0.5; break;
-                    case NODE_SPLITTER_1_2:     intrinsic_loss = 3.5; break;
-                    case NODE_SPLITTER_1_8:     intrinsic_loss = 10.5; break;
-                    case NODE_SPLITTER_1_16:    intrinsic_loss = 13.8; break;
-                    default:                    intrinsic_loss = 0.0; break; // POSTE, MANHOLE, OLT
-                }
-
-                nodeAdd(network, nodoId, desc, tipo, intrinsic_loss);
-                printf("\nPoste [%d] agregado con exito\n", nodoId);
+                char name[50];
+                printf("\nIngresa el nombre para el nuevo mapa: ");
+                scanf(" %49[^\n]", name);
+                Graph* newG = graphCreate(name);
+                graphs->add(graphs, newG);
+                printf("Mapa '%s' creado con exito.\n", name);
                 pausa();
                 break;
             }
             case 3:
-                // TODO: Llamada a funcion
+                // TODO: Llamada a funcion de carga
                 break;
             case 4: {
+                graphs->print(graphs);
+                if (graphs->size == 0) {
+                    pausa();
+                    break;
+                }
+                printf("\nSelecciona el indice del mapa: ");
+                int idx = getInt();
+                Graph* network = graphs->get(graphs, idx);
+                if (!network) {
+                    printf("Indice invalido.\n");
+                    pausa();
+                    break;
+                }
 
                 int src, dest;
                 double dist;
@@ -149,15 +140,85 @@ MAP:
                 break;
             }
             case 5:
-                // TODO: Llamada a funcion
+                // TODO: Llamada a funcion de guardado
                 break;
+            case 6: {
+                graphs->print(graphs);
+                if (graphs->size == 0) {
+                    pausa();
+                    break;
+                }
+                printf("\nSelecciona el indice del mapa: ");
+                int idx = getInt();
+                Graph* network = graphs->get(graphs, idx);
+                if (!network) {
+                    printf("Indice invalido.\n");
+                    pausa();
+                    break;
+                }
+
+                int nodoId;
+                char desc[50];
+                double intrinsic_loss = 0.0;
+                NodeType tipo;
+
+                printf("\nIngresa el ID del nuevo poste/nodo:");
+                nodoId = getInt();
+                printf("Ingresa una breve descripcion\n > ");
+                scanf(" %49[^\n]", desc);
+
+                printf("\nSelecciona el tipo de equipo:\n\n");
+                printf("\t0. Poste (0.0 dB)\n");
+                printf("\t1. Pozo / Manhole (0.0 dB)\n");
+                printf("\t2. Caja de Empalme (0.1 dB)\n");
+                printf("\t3. Conexión / Conector (0.75 dB)\n");
+                printf("\t4. Hub de Distribución (0.5 dB)\n");
+                printf("\t5. Nodo OLT (origen, 0.0 dB)\n");
+                printf("\t6. Splitter 1:2 (3.5 dB)\n");
+                printf("\t7. Splitter 1:8 (10.5 dB)\n");
+                printf("\t8. Splitter 1:16 (13.8 dB)\n");
+
+                int tipo_input = menuInputOpt(0, 8);
+                tipo = (NodeType)tipo_input;
+
+                switch(tipo) {
+                    case NODE_SPLICE_ENCLOSURE: intrinsic_loss = 0.1; break;
+                    case NODE_CONNECTION:       intrinsic_loss = 0.75; break;
+                    case NODE_DISTRIBUTION_HUB: intrinsic_loss = 0.5; break;
+                    case NODE_SPLITTER_1_2:     intrinsic_loss = 3.5; break;
+                    case NODE_SPLITTER_1_8:     intrinsic_loss = 10.5; break;
+                    case NODE_SPLITTER_1_16:    intrinsic_loss = 13.8; break;
+                    default:                    intrinsic_loss = 0.0; break; // POSTE, MANHOLE, OLT
+                }
+
+                nodeAdd(network, nodoId, desc, tipo, intrinsic_loss);
+                printf("\nPoste [%d] agregado con exito al mapa '%s'\n", nodoId, network->name);
+                pausa();
+                break;
+            }
         }
     }
 
 SIM:
+    graphs->print(graphs);
+    if (graphs->size == 0) {
+        printf("\nNo hay mapas cargados para simular.\n");
+        pausa();
+        goto START;
+    }
+    printf("\nSelecciona el indice del mapa para la simulacion: ");
+    int simIdx = getInt();
+    Graph* simNetwork = graphs->get(graphs, simIdx);
+    if (!simNetwork) {
+        printf("Indice invalido.\n");
+        pausa();
+        goto START;
+    }
+
     while (1) {
         clearConsole();
         printf("%s", menuHeadSim);
+        printf("\nMAPA ACTUAL: %s\n", simNetwork->name);
 
         menuPrint(menuSim);
         opc = menuInputOpt(0, 5);
@@ -168,23 +229,27 @@ SIM:
                 break;
             case 1:
                 // TODO: Llamada a funcion
+                break;
             case 2:
                 // TODO: Llamada a funcion
+                break;
             case 3:
                 // TODO: Llamada a funcion
+                break;
             case 4:
                 // TODO: Llamada a funcion
+                break;
             case 5: {
 
                 int originId;
                 printf("\n--- Simulador de Enrutamiento Optimo ---\n");
-                if (network->V == 0) {
+                if (simNetwork->V == 0) {
                     printf("|Error| La red esta vacia. Agregue nodos primero.\n");
                 } else {
                     printf("Ingrese el ID del Nodo OLT (Origen de la señal): ");
                     originId = getInt();
 
-                    dijkstra(network, originId);
+                    dijkstra(simNetwork, originId);
                 }
 
                 pausa();
@@ -204,4 +269,3 @@ int main() {
 
     return 0;
 }
-

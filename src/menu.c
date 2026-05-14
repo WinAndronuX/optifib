@@ -32,11 +32,12 @@ const char* menuHeadMap = {
 };
 
 const char* menuMap[] = {
-    "1 ) Visualizar topologia civil (nodos y tramos)",
-    "2 ) Crear nuevo trazado urbano",
+    "1 ) Visualizar listado de mapas",
+    "2 ) Crear nuevo mapa (trazado urbano)",
     "3 ) Cargar mapa base desde CSV",
     "4 ) Conectar nodos (trazar ducteria/posteria)",
     "5 ) Guardar mapa base",
+    "6 ) Agregar nodo a un mapa",
     "",
     "0 ) Volver",
     NULL

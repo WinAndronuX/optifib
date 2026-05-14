@@ -36,9 +36,20 @@ typedef struct _adjlist {
 typedef struct _graph {
     int V;
     Adjlist* arr;
-}Graph;
+    char* name;
+} Graph;
 
-Graph* graphCreate();
+typedef struct _graphlist {
+    Graph** arr;
+    int size;
+    int cap;
+    void (*add)(struct _graphlist* self, Graph* graph);
+    Graph* (*get)(struct _graphlist* self, int indice);
+    void (*print)(struct _graphlist* self);
+    void (*destroy)(struct _graphlist* self);
+} GraphList;
+
+Graph* graphCreate(const char* name);
 void graphFree(Graph* g);
 void graphPrint(Graph* g);
 
@@ -46,5 +57,11 @@ void nodeAdd(Graph* g, int id, const char* description, NodeType type, double in
 void edgeAdd(Node* source, int target_id, FiberDeployment type, double distance, double link_loss);
 
 Node* nodeFind(Graph* g, int id);
+
+GraphList* initGrapList();
+void _graphlistAdd(GraphList* self, Graph* graph);
+Graph* _graphlistGet(GraphList* self, int indice);
+void _graphlistPrint(GraphList* self);
+void _graphlistDestroy(GraphList* self);
 
 #endif
