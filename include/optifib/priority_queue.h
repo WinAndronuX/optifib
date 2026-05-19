@@ -16,7 +16,7 @@ typedef struct _minheap {
 } MinHeap;
 
 
-MinHeap* createMinHeap(int capacity);
+MinHeap* createMinHeap(int capacity, int max_id);
 void minHeapify(MinHeap* minHeap, int idx);
 Node* extractMin(MinHeap* minHeap);
 

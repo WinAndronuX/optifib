@@ -26,6 +26,9 @@ typedef enum {
 
 struct Map* loadMap(const char* name, MapMode mode);
 
+Graph* loadGraph(const char* name);
+MapStatusOp saveGraph(Graph* g);
+
 MapStatusOp readNode(MapReader* r, Node* n);
 MapStatusOp readEdge(MapReader* r, Edge* e);
 
@@ -33,5 +36,7 @@ MapStatusOp writeNode(MapWriter* w, Node* n);
 MapStatusOp writeEdge(MapWriter* w, Edge* e);
 
 void closeMap(struct Map* m);
+
+MapStatusOp exportReport(Graph* g, int originId, int destId, double totalLoss, double powerOut, double powerIn, double sensitivity);
 
 #endif

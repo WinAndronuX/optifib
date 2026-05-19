@@ -53,10 +53,11 @@ Graph* graphCreate(const char* name);
 void graphFree(Graph* g);
 void graphPrint(Graph* g);
 
-void nodeAdd(Graph* g, int id, const char* description, NodeType type, double intrinsic_loss);
+void nodeAdd(Graph* g, int id, const char* description, NodeType civil_type, NodeType equipment_type, double intrinsic_loss);
 void edgeAdd(Node* source, int target_id, FiberDeployment type, double distance, double link_loss);
 
 Node* nodeFind(Graph* g, int id);
+int nodeCountType(Graph* g, NodeType type);
 
 GraphList* initGrapList();
 void _graphlistAdd(GraphList* self, Graph* graph);

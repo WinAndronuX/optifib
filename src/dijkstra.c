@@ -9,11 +9,14 @@
 #include <optifib/dijkstra.h>
 #include <stdlib.h>
 
-// [NUEVO] Función auxiliar para el Rastreo Inverso (va hacia atrás usando los predecesores)
+#include <optifib/persistence.h>
+
+double current_olt_power_dbm = 2.0;      // Potencia estándar inicial
+double current_onu_sensitivity_dbm = -28.0; // Umbral estándar inicial
+
 void printPath(int current_node_id, Graph* graph) {
     if (current_node_id == -1) return;
 
-    // Buscar el nodo actual en el grafo para saber su predecesor y descripción
     Node* n = NULL;
     for (int i = 0; i < graph->V; i++) {
         if (graph->arr[i].nodes->id == current_node_id) {
@@ -23,10 +26,8 @@ void printPath(int current_node_id, Graph* graph) {
     }
 
     if (n != NULL) {
-        // Llamada recursiva: primero procesa el predecesor para que se imprima de OLT -> Destino
         printPath(n->previous_node_id, graph);
         
-        // Imprime el nodo actual. Si tiene predecesor, ponemos una flecha antes
         if (n->previous_node_id != -1) {
             printf(" -> ");
         }
@@ -34,60 +35,65 @@ void printPath(int current_node_id, Graph* graph) {
     }
 }
 
-// [NUEVO] Función auxiliar para evaluar la potencia contra el umbral de -28 dBm
 void emitirReporteViabilidad(double perdida_total) {
-    const double POTENCIA_OLT = 2.0;      // Potencia estándar de salida en dBm
-    const double UMBRAL_CRITICO = -28.0;  // Límite establecido en la propuesta
-    
-    double potencia_final = POTENCIA_OLT - perdida_total;
+    double potencia_final = current_olt_power_dbm - perdida_total;
 
-    printf("\n============================================\n");
-    printf("       REPORTE DE VIABILIDAD OPTICA         \n");
-    printf("============================================\n");
-    printf("Potencia de Salida (OLT):  %.2f dBm\n", POTENCIA_OLT);
-    printf("Perdida Total Calculada:   %.2f dB\n", perdida_total);
-    printf("Potencia en el Destino:    %.2f dBm\n", potencia_final);
-    printf("--------------------------------------------\n");
+    printf("\n┌──────────────────────────────────────────────┐\n");
+    printf("│        REPORTE DE VIABILIDAD ÓPTICA          │\n");
+    printf("├──────────────────────────────────────────────┤\n");
+    printf("│ Potencia de Salida (OLT):    %8.2f dBm    │\n", current_olt_power_dbm);
+    printf("│ Pérdida Total Calculada:     %8.2f dB     │\n", perdida_total);
+    printf("│ Potencia en el Destino:      %8.2f dBm    │\n", potencia_final);
+    printf("│ Umbral de Sensibilidad (ONU):%8.2f dBm    │\n", current_onu_sensitivity_dbm);
+    printf("├──────────────────────────────────────────────┤\n");
 
-    if (potencia_final >= UMBRAL_CRITICO) {
-        printf("ESTADO: [ VIABLE / OPERACIONAL ]\n");
-        printf("Nota: La senal cumple con los estandares.\n");
+    if (potencia_final >= current_onu_sensitivity_dbm) {
+        printf("│ ESTADO: [ VIABLE / OPERACIONAL ]             │\n");
+        printf("│ Nota: La señal cumple con los estándares.    │\n");
     } else {
-        printf("ESTADO: [ !!! SENAL CRITICA !!! ]\n");
-        printf("ALERTA: La potencia es menor a -28 dBm.\n");
-        printf("Accion: Se requiere rediseno o amplificacion.\n");
+        printf("│ ESTADO: [ !!! SEÑAL CRÍTICA !!! ]            │\n");
+        printf("│ ALERTA: La potencia es menor al umbral.      │\n");
+        printf("│ Acción: Requiere rediseño o amplificación    │\n");
     }
-    printf("============================================\n");
+    printf("└──────────────────────────────────────────────┘\n");
 }
 
-// Tu función principal Dijkstra modificada
+
 void dijkstra(Graph* graph, int src_id) {
     if (graph == NULL || graph->V == 0) return;
 
-    // Inicializar distancias y estados
+    Node* originCheck = nodeFind(graph, src_id);
+    if (originCheck == NULL || (originCheck->type != NODE_OLT && originCheck->civil_type != NODE_OLT)) {
+        printf("\n|ERROR| El nodo %d no es una OLT valida. La simulacion requiere una fuente de luz.\n", src_id);
+        return;
+    }
+
+    int max_id = -1;
+    for (int i = 0; i < graph->V; i++) {
+        if (graph->arr[i].nodes->id > max_id) {
+            max_id = graph->arr[i].nodes->id;
+        }
+    }
+
+    Node** idToNode = (Node**) calloc(max_id + 1, sizeof(Node*));
     for (int i = 0; i < graph->V; i++) {
         Node* n = graph->arr[i].nodes;
+        idToNode[n->id] = n;
         n->min_accumulated_loss = DBL_MAX;
         n->visited = 0;
         n->previous_node_id = -1;
     }
 
-    Node* srcNode = nodeFind(graph, src_id);
-    if (srcNode == NULL) {
-        printf("Error: Nodo origen %d no encontrado.\n", src_id);
-        return;
-    }
+    Node* srcNode = idToNode[src_id];
+    srcNode->min_accumulated_loss = 0;
 
-    srcNode->min_accumulated_loss = 0; // OLT no suele tener perdida inicial en el origen
-
-    MinHeap* minHeap = createMinHeap(graph->V);
+    MinHeap* minHeap = createMinHeap(graph->V, max_id);
     for (int i = 0; i < graph->V; i++) {
         minHeap->array[i] = graph->arr[i].nodes;
         minHeap->pos[graph->arr[i].nodes->id] = i;
     }
     minHeap->size = graph->V;
 
-    // Mover el origen al inicio del heap
     decreaseKey(minHeap, src_id, 0.0);
 
     while (minHeap->size != 0) {
@@ -98,7 +104,7 @@ void dijkstra(Graph* graph, int src_id) {
 
         Edge* edge = uNode->adj_list;
         while (edge != NULL) {
-            Node* vNode = nodeFind(graph, edge->target_id);
+            Node* vNode = idToNode[edge->target_id];
             if (vNode != NULL && !vNode->visited) {
                 double weight = edge->link_loss_db + vNode->intrinsic_loss_db;
                 if (uNode->min_accumulated_loss + weight < vNode->min_accumulated_loss) {
@@ -111,22 +117,20 @@ void dijkstra(Graph* graph, int src_id) {
         }
     }
 
-    // Output de resultados técnicos (tabla original)
-    printf("\n+------+---------------------------+----------------+------------+\n");
-    printf("| ID   | Descripcion               | Perdida (dB)   | Predecesor |\n");
-    printf("+------+---------------------------+----------------+------------+\n");
+    printf("\n┌──────┬───────────────────────────┬────────────────┬────────────┐\n");
+    printf("│ %-4s │ %-25s │ %-14s │ %-10s │\n", "ID", "DESCRIPCIÓN ", "PÉRDIDA (dB)", "PREDECESOR");
+    printf("├──────┼───────────────────────────┼────────────────┼────────────┤\n");
     for (int i = 0; i < graph->V; i++) {
         Node* n = graph->arr[i].nodes;
-        printf("| %-4d | %-25s | ", n->id, n->description);
-        if (n->min_accumulated_loss == DBL_MAX) printf("%-14s | ", "INF");
-        else printf("%-14.2f | ", n->min_accumulated_loss);
+        printf("│ %-4d │ %-25.25s │ ", n->id, n->description);
+        if (n->min_accumulated_loss == DBL_MAX) printf("%-14s │ ", "INF");
+        else printf("%-14.2f │ ", n->min_accumulated_loss);
         
-        if (n->previous_node_id == -1) printf("%-10s |\n", "N/A");
-        else printf("%-10d |\n", n->previous_node_id);
+        if (n->previous_node_id == -1) printf("%-10s │\n", "N/A");
+        else printf("%-10d │\n", n->previous_node_id);
     }
-    printf("+------+---------------------------+----------------+------------+\n");
+    printf("└──────┴───────────────────────────┴────────────────┴────────────┘\n");
 
-    // [NUEVO] Preguntar al usuario qué nodo específico quiere auditar para trazar su ruta
     int dest_id;
     printf("\nIngrese el ID del nodo destino para analizar la ruta y viabilidad: ");
     if (scanf("%d", &dest_id) == 1) {
@@ -141,10 +145,19 @@ void dijkstra(Graph* graph, int src_id) {
             printPath(dest_id, graph);
             printf("\n");
 
-            // Ejecutar la validación de los -28 dBm
             emitirReporteViabilidad(destNode->min_accumulated_loss);
+
+            printf("\nDesea exportar este reporte a un archivo? (1 = Si, 0 = No): ");
+            int opt;
+            scanf("%d", &opt);
+            if (opt == 1) {
+                exportReport(graph, src_id, dest_id, destNode->min_accumulated_loss, 
+                             current_olt_power_dbm, current_olt_power_dbm - destNode->min_accumulated_loss, 
+                             current_onu_sensitivity_dbm);
+            }
         }
     }
 
+    free(idToNode);
     freeMinHeap(minHeap);
 }

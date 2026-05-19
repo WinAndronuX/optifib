@@ -74,7 +74,7 @@ void graphPrint(Graph* g) {
 
 }
 
-void nodeAdd(Graph* g, int id, const char* description, NodeType type, double intrinsic_loss) {
+void nodeAdd(Graph* g, int id, const char* description, NodeType civil_type, NodeType equipment_type, double intrinsic_loss) {
     if (g == NULL) return;
     Adjlist* temp_arr = (Adjlist*) realloc(g->arr, sizeof(Adjlist) * (g->V + 1));
     if (temp_arr == NULL) return;
@@ -89,8 +89,8 @@ void nodeAdd(Graph* g, int id, const char* description, NodeType type, double in
 
 
     newNode->id = id;
-    newNode->type = type;
-    newNode->civil_type = type;
+    newNode->type = equipment_type;
+    newNode->civil_type = civil_type;
     newNode->intrinsic_loss_db = intrinsic_loss;
 
 
@@ -138,6 +138,17 @@ Node* nodeFind(Graph* g, int id) {
         }
     }
     return NULL;
+}
+
+int nodeCountType(Graph* g, NodeType type) {
+    if (g == NULL) return 0;
+    int count = 0;
+    for (int i = 0; i < g->V; i++) {
+        if (g->arr[i].nodes->type == type) {
+            count++;
+        }
+    }
+    return count;
 }
 
 
@@ -203,16 +214,21 @@ Graph* _graphlistGet(GraphList* self, int indice) {
 }
 
 void _graphlistPrint(GraphList* self) {
-
-    int i = 0;
     if (self->size == 0) {
-        printf("\nNo hay mapas cargados.\n");
+        printf("\n ┌──────────────────────────────────────────┐\n");
+        printf(" │       No hay mapas cargados todavía.     │\n");
+        printf(" └──────────────────────────────────────────┘\n");
         return;
     }
 
-    printf("\n--- Listado de Mapas ---\n");
-    for (i = 0; i < self->size; i++)
-        printf("%d - %s\n", i, self->arr[i]->name);
+    printf("\n  Listado de Mapas Disponibles:\n");
+    printf(" ┌────────┬────────────────────────────────┐\n");
+    printf(" │ ÍNDICE │ NOMBRE DEL MAPA                │\n");
+    printf(" ├────────┼────────────────────────────────┤\n");
+    for (int i = 0; i < self->size; i++) {
+        printf(" │ %-6d │ %-30.30s │\n", i, self->arr[i]->name);
+    }
+    printf(" └────────┴────────────────────────────────┘\n");
 }
 
 void _graphlistDestroy(GraphList* self) {
