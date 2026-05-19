@@ -4,6 +4,7 @@
 #include <optifib/menu.h>
 #include <optifib/graph.h>
 #include <optifib/dijkstra.h>
+#include <optifib/persistence.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -77,9 +78,20 @@ MAP:
                 pausa();
                 break;
             }
-            case 3:
-                // TODO: Llamada a funcion de carga
+            case 3: {
+                char name[50];
+                printf("\nIngresa el prefijo del mapa a cargar : ");
+                scanf(" %49s", name);
+                Graph* loadedG = loadGraph(name);
+                if (loadedG) {
+                    graphs->add(graphs, loadedG);
+                    printf("Mapa '%s' cargado con exito desde CSV.\n", name);
+                } else {
+                    printf("|ERROR| No se pudo encontrar o cargar el mapa '%s'.\n", name);
+                }
+                pausa();
                 break;
+            }
             case 4: {
                 graphs->print(graphs);
                 if (graphs->size == 0) {
@@ -124,24 +136,41 @@ MAP:
                 dist = getDouble();
 
 
-                printf("\n\nTipo de despliegue de Fibra:\n");
-                printf("\t0. Aereo (0.35 dB/km)\n");
-                printf("\t1. Subterraneo (0.40 dB/km)\n");
+                printf("\n  Tipo de despliegue de Fibra:\n");
+                printf("\t 0. Aéreo (0.35 dB/km)\n");
+                printf("\t 1. Subterráneo (0.40 dB/km)\n");
                 int tipo_fibra = menuInputOpt(0, 1);
 
                 double coeficiente = (tipo_fibra == FIBER_AERIAL) ? 0.35 : 0.40;
-                double linkLoss = dist * coeficiente;
 
 
-                edgeAdd(source_node, dest, (FiberDeployment)tipo_fibra, dist, linkLoss);
-                edgeAdd(dest_node, src, (FiberDeployment)tipo_fibra, dist, linkLoss);
+                edgeAdd(source_node, dest, (FiberDeployment)tipo_fibra, dist, coeficiente);
+                edgeAdd(dest_node, src, (FiberDeployment)tipo_fibra, dist, coeficiente);
                 printf("\nConexion establecida con exito desde [%d] hacia [%d]\n", src, dest);
                 pausa();
                 break;
             }
-            case 5:
-                // TODO: Llamada a funcion de guardado
+            case 5: {
+                graphs->print(graphs);
+                if (graphs->size == 0) {
+                    pausa();
+                    break;
+                }
+                printf("\nSelecciona el indice del mapa para GUARDAR: ");
+                int idx = getInt();
+                Graph* gToSave = graphs->get(graphs, idx);
+                if (gToSave) {
+                    if (saveGraph(gToSave) == MAP_STATUS_OP_OK) {
+                        printf("Mapa '%s' guardado exitosamente.\n", gToSave->name);
+                    } else {
+                        printf("|ERROR| No se pudo guardar el mapa.\n");
+                    }
+                } else {
+                    printf("Indice invalido.\n");
+                }
+                pausa();
                 break;
+            }
             case 6: {
                 graphs->print(graphs);
                 if (graphs->size == 0) {
@@ -167,16 +196,16 @@ MAP:
                 printf("Ingresa una breve descripcion\n > ");
                 scanf(" %49[^\n]", desc);
 
-                printf("\nSelecciona el tipo de equipo:\n\n");
-                printf("\t0. Poste (0.0 dB)\n");
-                printf("\t1. Pozo / Manhole (0.0 dB)\n");
-                printf("\t2. Caja de Empalme (0.1 dB)\n");
-                printf("\t3. Conexión / Conector (0.75 dB)\n");
-                printf("\t4. Hub de Distribución (0.5 dB)\n");
-                printf("\t5. Nodo OLT (origen, 0.0 dB)\n");
-                printf("\t6. Splitter 1:2 (3.5 dB)\n");
-                printf("\t7. Splitter 1:8 (10.5 dB)\n");
-                printf("\t8. Splitter 1:16 (13.8 dB)\n");
+                printf("\n  Selecciona el tipo de equipo:\n");
+                printf("\t 0. Poste (0.0 dB)\n");
+                printf("\t 1. Pozo / Manhole (0.0 dB)\n");
+                printf("\t 2. Caja de Empalme (0.1 dB)\n");
+                printf("\t 3. Conexión / Conector (0.75 dB)\n");
+                printf("\t 4. Hub de Distribución (0.5 dB)\n");
+                printf("\t 5. Nodo OLT (origen, 0.0 dB)\n");
+                printf("\t 6. Splitter 1:2 (3.5 dB)\n");
+                printf("\t 7. Splitter 1:8 (10.5 dB)\n");
+                printf("\t 8. Splitter 1:16 (13.8 dB)\n");
 
                 int tipo_input = menuInputOpt(0, 8);
                 tipo = (NodeType)tipo_input;
@@ -191,7 +220,7 @@ MAP:
                     default:                    intrinsic_loss = 0.0; break; // POSTE, MANHOLE, OLT
                 }
 
-                nodeAdd(network, nodoId, desc, tipo, intrinsic_loss);
+                nodeAdd(network, nodoId, desc, tipo, tipo, intrinsic_loss);
                 printf("\nPoste [%d] agregado con exito al mapa '%s'\n", nodoId, network->name);
                 pausa();
                 break;
@@ -227,24 +256,73 @@ SIM:
             case 0:
                 goto START;
                 break;
-            case 1:
-                // TODO: Llamada a funcion
+            case 1: { // Fusión
+                printf("\nIngrese el ID del nodo para instalar Fusión: ");
+                int id = getInt();
+                Node* n = nodeFind(simNetwork, id);
+                if (n) {
+                    n->type = NODE_SPLICE_ENCLOSURE;
+                    n->intrinsic_loss_db = 0.1;
+                    printf("Nodo [%d] equipado con Fusión (0.1 dB).\n", id);
+                } else printf("|ERROR| Nodo no encontrado.\n");
+                pausa();
                 break;
-            case 2:
-                // TODO: Llamada a funcion
+            }
+            case 2: { // Conector
+                printf("\nIngrese el ID del nodo para instalar Conector: ");
+                int id = getInt();
+                Node* n = nodeFind(simNetwork, id);
+                if (n) {
+                    n->type = NODE_CONNECTION;
+                    n->intrinsic_loss_db = 0.75;
+                    printf("Nodo [%d] equipado con Conector (0.75 dB).\n", id);
+                } else printf("|ERROR| Nodo no encontrado.\n");
+                pausa();
                 break;
-            case 3:
-                // TODO: Llamada a funcion
+            }
+            case 3: { // Splitter
+                printf("\nIngrese el ID del nodo para instalar Splitter: ");
+                int id = getInt();
+                Node* n = nodeFind(simNetwork, id);
+                if (n) {
+                    printf("\n  Selecciona tipo de Splitter:\n");
+                    printf("\t 1. Splitter 1:2 (3.5 dB)\n");
+                    printf("\t 2. Splitter 1:8 (10.5 dB)\n");
+                    printf("\t 3. Splitter 1:16 (13.8 dB)\n");
+                    int sopt = menuInputOpt(1, 3);
+                    if (sopt == 1) { n->type = NODE_SPLITTER_1_2; n->intrinsic_loss_db = 3.5; }
+                    else if (sopt == 2) { n->type = NODE_SPLITTER_1_8; n->intrinsic_loss_db = 10.5; }
+                    else { n->type = NODE_SPLITTER_1_16; n->intrinsic_loss_db = 13.8; }
+                    printf("Nodo [%d] equipado con Splitter.\n", id);
+                } else printf("|ERROR| Nodo no encontrado.\n");
+                pausa();
                 break;
-            case 4:
-                // TODO: Llamada a funcion
+            }
+            case 4: {
+                printf("\n--- Configuracion de Potencia y Sensibilidad ---");
+                printf("\nPotencia actual OLT: %.2f dBm", current_olt_power_dbm);
+                printf("\nIngrese nueva potencia OLT (dBm): ");
+                current_olt_power_dbm = getDouble();
+
+                printf("\nSensibilidad actual ONU: %.2f dBm", current_onu_sensitivity_dbm);
+                printf("\nIngrese nueva sensibilidad ONU (ej. -28.0): ");
+                current_onu_sensitivity_dbm = getDouble();
+
+                printf("\nParametros actualizados correctamente.\n");
+                pausa();
                 break;
+            }
             case 5: {
 
                 int originId;
-                printf("\n--- Simulador de Enrutamiento Optimo ---\n");
+                printf("\n  ┌──────────────────────────────────────────┐\n");
+                printf("  │    Simulador de Enrutamiento Óptimo      │\n");
+                printf("  └──────────────────────────────────────────┘\n");
                 if (simNetwork->V == 0) {
                     printf("|Error| La red esta vacia. Agregue nodos primero.\n");
+                } else if (nodeCountType(simNetwork, NODE_OLT) == 0) {
+                    printf("|Error| No se ha detectado ninguna OLT en el mapa.\n");
+                    printf("Debe agregar al menos un nodo tipo OLT o equipar uno existente.\n");
                 } else {
                     printf("Ingrese el ID del Nodo OLT (Origen de la señal): ");
                     originId = getInt();

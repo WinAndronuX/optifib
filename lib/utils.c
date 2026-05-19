@@ -18,9 +18,13 @@ bool isInRange(int x, int a, int b) {
     return x >= a && x <= b;
 }
 
+#include <ctype.h>
+
 int clearBuffer() {
     int c, n = 0;
-    while ((c = getchar()) != '\n' && c != EOF) n++;
+    while ((c = getchar()) != '\n' && c != EOF) {
+        if (!isspace(c)) n++;
+    }
     return n;
 }
 

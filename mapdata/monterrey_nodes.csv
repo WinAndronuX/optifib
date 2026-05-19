@@ -1,21 +1,22 @@
-1,OLT,Central Macroplaza,0.0
-2,POLE,Poste Palacio de Gobierno,0.0
-3,MANHOLE,Registro Catedral,0.0
-4,POLE,Poste Museo MARCO,0.0
-5,MANHOLE,Registro Barrio Antiguo Sur,0.0
-6,POLE,Poste Fuente de la Vida,0.0
-7,POLE,Poste Interseccion Juarez,0.0
-8,MANHOLE,Registro Plaza Morelos,0.0
-9,POLE,Poste Calle Padre Mier,0.0
-10,POLE,Poste Calle Ocampo,0.0
-11,MANHOLE,Registro Alameda Norte,0.0
-12,POLE,Poste Alameda Sur,0.0
-13,POLE,Poste Mercado Juarez,0.0
-14,MANHOLE,Registro Estacion Metrorrey Centro,0.0
-15,POLE,Poste Santa Lucia Inicio,0.0
-16,POLE,Poste Santa Lucia Medio,0.0
-17,MANHOLE,Registro Museo Historia Mex,0.0
-18,POLE,Poste Barrio Antiguo Norte,0.0
-19,POLE,Poste Plaza de la Tecnologia,0.0
-20,MANHOLE,Registro Pino Suarez,0.0
-21,POLE,Poste Obispado Base,0.0
+1,OLT,SPLICE_ENCLOSURE,Central Macroplaza,0.10
+2,POLE,POLE,Poste Palacio de Gobierno,0.00
+3,MANHOLE,CONNECTION,Registro Catedral,0.75
+4,POLE,SPLICE_ENCLOSURE,Poste Museo MARCO,0.10
+5,MANHOLE,CONNECTION,Registro Barrio Antiguo Sur,0.75
+6,POLE,SPLITTER_1_16,Poste Fuente de la Vida,13.80
+7,POLE,CONNECTION,Poste Interseccion Juarez,0.75
+8,MANHOLE,MANHOLE,Registro Plaza Morelos,0.00
+9,POLE,POLE,Poste Calle Padre Mier,0.00
+10,POLE,POLE,Poste Calle Ocampo,0.00
+11,MANHOLE,CONNECTION,Registro Alameda Norte,0.75
+12,POLE,SPLITTER_1_16,Poste Alameda Sur,13.80
+13,POLE,POLE,Poste Mercado Juarez,0.00
+14,MANHOLE,MANHOLE,Registro Estacion Metrorrey Centro,0.00
+15,POLE,POLE,Poste Santa Lucia Inicio,0.00
+16,POLE,CONNECTION,Poste Santa Lucia Medio,0.75
+17,MANHOLE,MANHOLE,Registro Museo Historia Mex,0.00
+18,POLE,SPLITTER_1_8,Poste Barrio Antiguo Norte,10.50
+19,POLE,CONNECTION,Poste Plaza de la Tecnologia,0.75
+20,MANHOLE,SPLICE_ENCLOSURE,Registro Pino Suarez,0.10
+21,POLE,POLE,Poste Obispado Base,0.00
+24,OLT,OLT,OLT,0.00

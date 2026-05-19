@@ -1,4 +1,5 @@
-0,OLT,Central Office,0.0
-1,SPLITTER_1_8,Splitter Primario,10.5
-2,POLE,Poste Esquina,0.0
-3,SPLICE_ENCLOSURE,Mufa de Distribucion,0.1
+1,POLE,POLE,Poste 1,0.0
+2,POLE,POLE,Poste 2,0.0
+3,MANHOLE,MANHOLE,Pozo 1,0.0
+4,POLE,POLE,Poste 3,0.0
+5,OLT,OLT,Nodo Central,0.0

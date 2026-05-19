@@ -10,6 +10,9 @@
 
 #define INF INT_MAX
 
+extern double current_olt_power_dbm;
+extern double current_onu_sensitivity_dbm;
+
 void dijkstra(Graph* graph, int src);
 
 #endif

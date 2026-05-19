@@ -18,13 +18,14 @@ void swapMinHeapNode(MinHeap* minHeap, int idx1, int idx2) {
 }
 
 
-MinHeap* createMinHeap(int capacity) {
+MinHeap* createMinHeap(int capacity, int max_id) {
     MinHeap* minHeap = malloc(sizeof(MinHeap));
     if (!minHeap) return NULL;
 
     minHeap->size = 0;
     minHeap->capacity = capacity;
-    minHeap->pos = (int*) malloc(capacity * sizeof(int));
+    // El arreglo pos debe ser lo suficientemente grande para contener el ID maximo + 1
+    minHeap->pos = (int*) malloc((max_id + 1) * sizeof(int));
     minHeap->array = (Node**) malloc(capacity * sizeof(Node*));
 
     return minHeap;
